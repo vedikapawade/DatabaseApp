@@ -10,46 +10,63 @@ import java.util.List;
 @RestController
 @RequestMapping("/students")
 public class StudentController {
-	
-	@DeleteMapping("/{id}")
-	public String deleteStudent(@PathVariable Integer id) {
-
-	    repository.deleteById(id);
-
-	    return "Student Deleted Successfully";
-	}
-	
-	@PutMapping("/{id}")
-	public Student updateStudent(@PathVariable Integer id,
-	                             @RequestBody Student student) {
-
-	    Student s = repository.findById(id).orElse(null);
-
-	    if (s != null) {
-	        s.setName(student.getName());
-	        s.setCourse(student.getCourse());
-
-	        return repository.save(s);
-	    }
-
-	    return null;
-	}
-	
-	@GetMapping("/{id}")
-	public Student getStudent(@PathVariable Integer id) {
-	    return repository.findById(id).orElse(null);
-	}
 
     @Autowired
-    StudentRepository repository;
+    private StudentRepository repository;
 
+    // Get all students
     @GetMapping
     public List<Student> getStudents() {
         return repository.findAll();
     }
 
+    // Get student by ID
+    @GetMapping("/{id}")
+    public Student getStudent(@PathVariable Integer id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    // Add new student
     @PostMapping
     public Student addStudent(@RequestBody Student student) {
         return repository.save(student);
+    }
+
+    // Update student
+    @PutMapping("/{id}")
+    public Student updateStudent(@PathVariable Integer id,
+                                 @RequestBody Student student) {
+
+        Student existingStudent = repository.findById(id).orElse(null);
+
+        if (existingStudent == null) {
+            throw new RuntimeException("Student not found with id: " + id);
+        }
+
+        existingStudent.setName(student.getName());
+        existingStudent.setCourse(student.getCourse());
+
+        return repository.save(existingStudent);
+    }
+
+    // Delete student
+    @DeleteMapping("/{id}")
+    public String deleteStudent(@PathVariable Integer id) {
+
+        Student existingStudent = repository.findById(id).orElse(null);
+
+        if (existingStudent == null) {
+            return "Student not found with id: " + id;
+        }
+
+        repository.deleteById(id);
+
+        return "Student deleted successfully.";
+    }
+
+    // Get students by course
+    @GetMapping("/course/{course}")
+    public List<Student> getStudentsByCourse(@PathVariable String course) {
+        return repository.findByCourse(course);
     }
 }
